@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Plus, Trash2, CheckCircle2, Play, ChevronLeft, Award, FileText, Clock, List, Target, AlertCircle, XCircle, Download, Sun, Moon, Monitor, RefreshCw } from 'lucide-react';
+import { Plus, Trash2, CheckCircle2, Play, ChevronLeft, Award, FileText, Clock, List, Target, AlertCircle, XCircle, Download, Sun, Moon, Monitor, RefreshCw, Settings } from 'lucide-react';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { Task, Comparison, Theme } from './types';
 import { calculateElo, getNextPair, addBusinessDays } from './utils/elo';
@@ -12,6 +12,7 @@ function App() {
   const [view, setView] = useState<'focus' | 'list' | 'arena' | 'checkin' | 'recurring'>('focus');
   const [newTaskText, setNewTaskText] = useState('');
   const [lastPrioritizedGlobal, setLastPrioritizedGlobal] = useLocalStorage<number>('last-prioritized-time', Date.now());
+  const [showSettings, setShowSettings] = useState(false);
   
   const [currentPair, setCurrentPair] = useState<[Task, Task] | null>(null);
   const [checkinTask, setCheckinTask] = useState<Task | null>(null);
@@ -252,18 +253,49 @@ function App() {
       const content = event.target?.result as string;
       const lines = content.split(/\r?\n/);
       
-      const newTasks: Task[] = lines
-        .map(line => line.trim())
-        .filter(line => line.length > 0 && !line.startsWith('task,score'))
-        .map(text => ({
-          id: crypto.randomUUID(),
-          text: text.replace(/^"|"$/g, ''),
-          score: 1000,
-          createdAt: Date.now(),
-          active: true,
-        }));
+      if (lines.length === 0) return;
 
-      if (newTasks.length > 0) setTasks(prev => [...prev, ...newTasks]);
+      const firstLine = lines[0].toLowerCase();
+      const isFullExport = firstLine.includes('text') && firstLine.includes('score');
+
+      const parsedTasks: Task[] = lines
+        .slice(isFullExport ? 1 : 0) // Skip header if it's an export
+        .map(line => {
+          if (!line.trim()) return null;
+
+          if (isFullExport) {
+            // Complex CSV parsing to handle quoted commas
+            const matches = line.match(/(".*?"|[^,]+|(?<=,)(?=,)|(?<=,)$|^)/g);
+            if (!matches) return null;
+            
+            const columns = matches.map(m => m.replace(/^"|"$/g, '').replace(/""/g, '"'));
+            
+            return {
+              id: crypto.randomUUID(),
+              text: columns[0] || 'Untitled Task',
+              score: parseInt(columns[1]) || 1000,
+              active: columns[2] === 'Active' || columns[2] === 'Snoozed',
+              createdAt: columns[3] ? new Date(columns[3]).getTime() : Date.now(),
+              completedAt: columns[4] ? new Date(columns[4]).getTime() : undefined,
+              snoozedUntil: columns[5] ? new Date(columns[5]).getTime() : undefined,
+              removedAt: columns[6] ? new Date(columns[6]).getTime() : undefined,
+            };
+          } else {
+            // Simple text import
+            return {
+              id: crypto.randomUUID(),
+              text: line.trim().replace(/^"|"$/g, ''),
+              score: 1000,
+              createdAt: Date.now(),
+              active: true,
+            };
+          }
+        })
+        .filter((t): t is Task => t !== null);
+
+      if (parsedTasks.length > 0) {
+        setTasks(prev => [...prev, ...parsedTasks]);
+      }
       e.target.value = '';
     };
     reader.readAsText(file);
@@ -279,11 +311,29 @@ function App() {
         </div>
         
         <div className="nav-group">
-          <div className="theme-toggle-group">
-            <button className={`theme-btn ${theme === 'light' ? 'active' : ''}`} onClick={() => setTheme('light')} title="Light Mode"><Sun size={16}/></button>
-            <button className={`theme-btn ${theme === 'system' ? 'active' : ''}`} onClick={() => setTheme('system')} title="System Theme"><Monitor size={16}/></button>
-            <button className={`theme-btn ${theme === 'dark' ? 'active' : ''}`} onClick={() => setTheme('dark')} title="Dark Mode"><Moon size={16}/></button>
+          <div className="settings-container">
+            <button 
+              className={`nav-btn ${showSettings ? 'active' : ''}`} 
+              onClick={() => setShowSettings(!showSettings)}
+              title="Settings"
+            >
+              <Settings size={20} />
+            </button>
+            
+            {showSettings && (
+              <div className="settings-dropdown animate-in">
+                <div className="dropdown-section">
+                  <span className="dropdown-label">Theme</span>
+                  <div className="theme-toggle-group">
+                    <button className={`theme-btn ${theme === 'light' ? 'active' : ''}`} onClick={() => { setTheme('light'); setShowSettings(false); }} title="Light Mode"><Sun size={16}/></button>
+                    <button className={`theme-btn ${theme === 'system' ? 'active' : ''}`} onClick={() => { setTheme('system'); setShowSettings(false); }} title="System Theme"><Monitor size={16}/></button>
+                    <button className={`theme-btn ${theme === 'dark' ? 'active' : ''}`} onClick={() => { setTheme('dark'); setShowSettings(false); }} title="Dark Mode"><Moon size={16}/></button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
+
           {needsPrioritization && (
             <button className="nav-alert" onClick={startArena}>
               <AlertCircle size={18} /> Prioritize Needed
