@@ -1,14 +1,15 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Plus, Trash2, CheckCircle2, Play, ChevronLeft, Award, FileText, Clock, List, Target, AlertCircle, XCircle } from 'lucide-react';
+import { Plus, Trash2, CheckCircle2, Play, ChevronLeft, Award, FileText, Clock, List, Target, AlertCircle, XCircle, Download, Sun, Moon, Monitor, RefreshCw } from 'lucide-react';
 import { useLocalStorage } from './hooks/useLocalStorage';
-import { Task, Comparison } from './types';
+import { Task, Comparison, Theme } from './types';
 import { calculateElo, getNextPair, addBusinessDays } from './utils/elo';
 import './App.css';
 
 function App() {
   const [tasks, setTasks] = useLocalStorage<Task[]>('todo-elo-tasks', []);
   const [comparisons, setComparisons] = useLocalStorage<Comparison[]>('todo-elo-comparisons', []);
-  const [view, setView] = useState<'focus' | 'list' | 'arena' | 'checkin'>('focus');
+  const [theme, setTheme] = useLocalStorage<Theme>('todo-elo-theme', 'system');
+  const [view, setView] = useState<'focus' | 'list' | 'arena' | 'checkin' | 'recurring'>('focus');
   const [newTaskText, setNewTaskText] = useState('');
   const [lastPrioritizedGlobal, setLastPrioritizedGlobal] = useLocalStorage<number>('last-prioritized-time', Date.now());
   
@@ -17,6 +18,15 @@ function App() {
   const [questionsInSession, setQuestionsInSession] = useState(0);
 
   const now = Date.now();
+
+  useEffect(() => {
+    const root = window.document.documentElement;
+    if (theme === 'system') {
+      root.removeAttribute('data-theme');
+    } else {
+      root.setAttribute('data-theme', theme);
+    }
+  }, [theme]);
 
   const formatSnoozeDate = (days: number) => {
     return new Date(addBusinessDays(new Date(), days)).toLocaleDateString(undefined, { weekday: 'short' });
@@ -35,12 +45,16 @@ function App() {
   }, [sortedTasks, now]);
 
   const completedTasks = useMemo(() => {
-    return sortedTasks.filter(t => !t.active && !t.removedAt);
+    return sortedTasks.filter(t => !t.active && !t.removedAt && !t.recurringInterval);
   }, [sortedTasks]);
 
   const removedTasks = useMemo(() => {
     return sortedTasks.filter(t => !!t.removedAt);
   }, [sortedTasks]);
+
+  const recurringTasks = useMemo(() => {
+    return tasks.filter(t => !!t.recurringInterval && !t.removedAt);
+  }, [tasks]);
 
   const topTask = activeAndAvailableTasks[0];
 
@@ -51,7 +65,6 @@ function App() {
   const needsPrioritization = (unprioritizedCount > 0 && activeAndAvailableTasks.length >= 2) || (now - lastPrioritizedGlobal > 60 * 60 * 1000 && activeAndAvailableTasks.length >= 2);
 
   const staleTask = useMemo(() => {
-    // A task is stale if it hasn't been checked/prioritized in 3 business days
     const threeDaysAgo = Date.now() - (3 * 24 * 60 * 60 * 1000); 
     return activeAndAvailableTasks.find(t => (t.lastCheckedAt || t.createdAt) < threeDaysAgo);
   }, [activeAndAvailableTasks]);
@@ -80,11 +93,33 @@ function App() {
   };
 
   const toggleComplete = (id: string) => {
-    const updatedTasks = tasks.map(t => t.id === id ? { ...t, active: !t.active, completedAt: !t.active ? Date.now() : undefined, lastCheckedAt: Date.now() } : t);
+    const task = tasks.find(t => t.id === id);
+    if (!task) return;
+
+    let updatedTasks = tasks.map(t => {
+      if (t.id === id) {
+        const isCompleting = t.active;
+        let snoozedUntil = t.snoozedUntil;
+        
+        if (isCompleting && t.recurringInterval) {
+          // If recurring, calculate next date
+          const nextDate = new Date();
+          if (t.recurringInterval === 'daily') nextDate.setDate(nextDate.getDate() + 1);
+          if (t.recurringInterval === 'weekly') nextDate.setDate(nextDate.getDate() + 7);
+          if (t.recurringInterval === 'monthly') nextDate.setMonth(nextDate.getMonth() + 1);
+          snoozedUntil = nextDate.getTime();
+          return { ...t, lastCheckedAt: Date.now(), snoozedUntil }; // Stay active but snooze
+        }
+        
+        return { ...t, active: !t.active, completedAt: !t.active ? Date.now() : undefined, lastCheckedAt: Date.now() };
+      }
+      return t;
+    });
+
     setTasks(updatedTasks);
     
     if (view === 'focus' || view === 'checkin') {
-      setLastPrioritizedGlobal(0); // Trigger prompt to prioritize after finishing a task
+      setLastPrioritizedGlobal(0);
       if (view === 'checkin') setView('focus');
     }
 
@@ -93,6 +128,10 @@ function App() {
       if (nextPair) setCurrentPair(nextPair);
       else setView('focus');
     }
+  };
+
+  const updateRecurringInterval = (id: string, interval?: Task['recurringInterval']) => {
+    setTasks(tasks.map(t => t.id === id ? { ...t, recurringInterval: interval } : t));
   };
 
   const removeTask = (id: string) => {
@@ -111,6 +150,37 @@ function App() {
   const hardDeleteTask = (id: string) => {
     setTasks(tasks.filter(t => t.id !== id));
     setComparisons(comparisons.filter(c => c.winnerId !== id && c.loserId !== id));
+  };
+
+  const handleExportCSV = () => {
+    const header = ['Text', 'Score', 'Status', 'Created At', 'Completed At', 'Snoozed Until', 'Removed At'].join(',');
+    const rows = tasks.map(t => {
+      let status = 'Active';
+      if (t.removedAt) status = 'Removed';
+      else if (!t.active) status = 'Completed';
+      else if (t.snoozedUntil && t.snoozedUntil > Date.now()) status = 'Snoozed';
+
+      return [
+        `"${t.text.replace(/"/g, '""')}"`,
+        t.score,
+        status,
+        new Date(t.createdAt).toISOString(),
+        t.completedAt ? new Date(t.completedAt).toISOString() : '',
+        t.snoozedUntil ? new Date(t.snoozedUntil).toISOString() : '',
+        t.removedAt ? new Date(t.removedAt).toISOString() : ''
+      ].join(',');
+    });
+
+    const csvContent = [header, ...rows].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `todo-elo-export-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const snoozeTask = (id: string, days: number) => {
@@ -149,10 +219,6 @@ function App() {
     
     const nextPair = getNextPair(updatedTasks, newComparisons);
     
-    // Logic: 
-    // 1. If no more pairs, exit.
-    // 2. If < 3 questions, keep going.
-    // 3. If >= 3 questions, check if we've found the King (the #1 spot is stable).
     if (!nextPair) {
       setView('focus');
       return;
@@ -204,17 +270,26 @@ function App() {
   };
 
   return (
-    <div className={`container ${(view === 'arena' || view === 'checkin') ? 'wide' : ''}`}>
+    <div className={`container ${(view === 'arena' || view === 'checkin' || view === 'focus') ? 'wide' : ''}`}>
       <nav className="main-nav">
         <div className="nav-group">
           <button className={view === 'focus' ? 'active' : ''} onClick={() => setView('focus')}><Target size={20}/> Focus</button>
           <button className={view === 'list' ? 'active' : ''} onClick={() => setView('list')}><List size={20}/> All Tasks</button>
+          <button className={view === 'recurring' ? 'active' : ''} onClick={() => setView('recurring')}><RefreshCw size={20}/> Recurring</button>
         </div>
-        {needsPrioritization && (
-          <button className="nav-alert" onClick={startArena}>
-            <AlertCircle size={18} /> Prioritize Needed
-          </button>
-        )}
+        
+        <div className="nav-group">
+          <div className="theme-toggle-group">
+            <button className={`theme-btn ${theme === 'light' ? 'active' : ''}`} onClick={() => setTheme('light')} title="Light Mode"><Sun size={16}/></button>
+            <button className={`theme-btn ${theme === 'system' ? 'active' : ''}`} onClick={() => setTheme('system')} title="System Theme"><Monitor size={16}/></button>
+            <button className={`theme-btn ${theme === 'dark' ? 'active' : ''}`} onClick={() => setTheme('dark')} title="Dark Mode"><Moon size={16}/></button>
+          </div>
+          {needsPrioritization && (
+            <button className="nav-alert" onClick={startArena}>
+              <AlertCircle size={18} /> Prioritize Needed
+            </button>
+          )}
+        </div>
       </nav>
 
       <form onSubmit={addTask} className="global-task-input">
@@ -343,11 +418,50 @@ function App() {
         </main>
       )}
 
+      {view === 'recurring' && (
+        <main className="dashboard animate-in">
+          <header>
+            <h1>Recurring Tasks</h1>
+          </header>
+          <div className="task-list">
+            {recurringTasks.map((task) => (
+              <div key={task.id} className="task-item">
+                <div className="task-icon"><RefreshCw size={16} /></div>
+                <div className="task-content">
+                  <span className="task-text">{task.text}</span>
+                  <div className="recurring-badge">{task.recurringInterval}</div>
+                </div>
+                <div className="task-actions">
+                  <select 
+                    className="btn-select"
+                    value={task.recurringInterval || ''} 
+                    onChange={(e) => updateRecurringInterval(task.id, e.target.value as any)}
+                  >
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                  </select>
+                  <button className="btn-text-danger" onClick={() => updateRecurringInterval(task.id, undefined)}>Stop</button>
+                </div>
+              </div>
+            ))}
+            {recurringTasks.length === 0 && (
+              <div className="empty-state">
+                <p>No recurring tasks yet. You can make any task recurring from the "All Tasks" list.</p>
+              </div>
+            )}
+          </div>
+        </main>
+      )}
+
       {view === 'list' && (
         <main className="dashboard animate-in">
           <header>
             <h1>All Tasks</h1>
             <div className="header-actions">
+              <button className="btn-secondary" onClick={handleExportCSV}>
+                <Download size={18} /> Export CSV
+              </button>
               <label className="btn-secondary">
                 <FileText size={18} /> Import CSV
                 <input 
@@ -378,6 +492,16 @@ function App() {
                       <span className="task-score">{task.score} ELO</span>
                     </div>
                     <div className="task-actions">
+                      <select 
+                        className="btn-select-mini"
+                        value={task.recurringInterval || ''} 
+                        onChange={(e) => updateRecurringInterval(task.id, e.target.value ? e.target.value as any : undefined)}
+                      >
+                        <option value="">One-time</option>
+                        <option value="daily">Daily</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly">Monthly</option>
+                      </select>
                       <div className="snooze-options">
                         <button onClick={() => snoozeTask(task.id, 1)} title="Snooze 1d">{formatSnoozeDate(1)}</button>
                         <button onClick={() => snoozeTask(task.id, 3)} title="Snooze 3d">{formatSnoozeDate(3)}</button>

@@ -32,163 +32,18 @@ h1 {
   font-weight: 700;
   margin: 0;
   letter-spacing: -0.5px;
+  color: var(--text-color);
 }
 
-.main-nav {
+.header-actions {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 40px;
-  background: white;
-  padding: 8px;
-  border-radius: 20px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-}
-
-.nav-group {
-  display: flex;
-  gap: 4px;
-}
-
-.main-nav button {
-  background: transparent;
-  padding: 8px 16px;
-  border-radius: 14px;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #8e8e93;
-  transition: all 0.2s;
-}
-
-.main-nav button.active {
-  background: #f2f2f7;
-  color: #007aff;
-}
-
-.nav-alert {
-  background: #fffbe6 !important;
-  color: #faad14 !important;
-  border: 1px solid #ffe58f;
-}
-
-.global-task-input {
-  display: flex;
-  background: white;
-  padding: 4px 4px 4px 20px;
-  border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-  margin-bottom: 40px;
-}
-
-.global-task-input input {
-  flex: 1;
-  border: none;
-  font-size: 17px;
-  outline: none;
-}
-
-.global-task-input button {
-  background: #007aff;
-  color: white;
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Focus View Styles */
-.focus-view {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 50vh;
-}
-
-.focus-card {
-  background: white;
-  padding: 60px 40px;
-  border-radius: 40px;
-  width: 100%;
-  max-width: 500px;
-  text-align: center;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.08);
-}
-
-.focus-label {
-  font-size: 13px;
-  font-weight: 700;
-  color: #007aff;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.focus-task-text {
-  font-size: 32px;
-  font-weight: 800;
-  margin: 24px 0 40px;
-  line-height: 1.2;
-}
-
-.focus-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.btn-done-large {
-  background: #34c759;
-  color: white;
-  padding: 20px;
-  border-radius: 20px;
-  font-size: 18px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   gap: 12px;
-  box-shadow: 0 10px 20px rgba(52, 199, 89, 0.2);
-}
-
-.focus-secondary-actions {
-  display: flex;
-  justify-content: center;
-  gap: 24px;
-}
-
-.focus-secondary-actions button {
-  background: transparent;
-  color: #8e8e93;
-  font-weight: 600;
-  font-size: 15px;
-}
-
-.empty-focus {
-  text-align: center;
-  color: #8e8e93;
-}
-
-.empty-focus h2 {
-  color: #1d1d1f;
-  margin: 16px 0 8px;
-}
-
-.btn-text-danger {
-  color: #ff3b30 !important;
-}
-
-.single-card {
-  max-width: 500px;
-  margin: 0 auto;
+  align-items: center;
 }
 
 .btn-secondary {
-  background: #f2f2f7;
-  color: #007aff;
+  background: var(--btn-secondary-bg);
+  color: var(--accent-color);
   padding: 10px 20px;
   border-radius: 20px;
   font-weight: 600;
@@ -200,11 +55,11 @@ h1 {
 }
 
 .btn-secondary:hover {
-  background: #e5e5ea;
+  background: var(--border-color);
 }
 
 .btn-primary {
-  background: #007aff;
+  background: var(--accent-color);
   color: white;
   padding: 10px 20px;
   border-radius: 20px;
@@ -216,7 +71,7 @@ h1 {
 }
 
 .btn-primary:hover {
-  background: #0066d6;
+  background: var(--accent-hover);
 }
 
 .task-list {
@@ -226,7 +81,7 @@ h1 {
 }
 
 .task-item {
-  background: white;
+  background: var(--card-bg);
   padding: 16px;
   border-radius: 16px;
   display: flex;
@@ -234,6 +89,7 @@ h1 {
   gap: 16px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+  border: 1px solid var(--border-color);
 }
 
 .task-item:hover {
@@ -244,14 +100,14 @@ h1 {
 .task-rank {
   font-size: 14px;
   font-weight: 700;
-  color: #8e8e93;
+  color: var(--secondary-text);
   width: 20px;
 }
 
 .task-check {
   background: transparent;
   padding: 0;
-  color: #007aff;
+  color: var(--accent-color);
 }
 
 .icon-hollow {
@@ -267,19 +123,20 @@ h1 {
 .task-text {
   font-size: 17px;
   font-weight: 500;
+  color: var(--text-color);
 }
 
 .task-score {
   font-size: 11px;
   font-weight: 600;
-  color: #8e8e93;
+  color: var(--secondary-text);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .task-delete {
   background: transparent;
-  color: #ff3b30;
+  color: var(--danger-color);
   opacity: 0;
   transition: opacity 0.2s;
 }
@@ -290,13 +147,13 @@ h1 {
 
 .completed .task-text {
   text-decoration: line-through;
-  color: #8e8e93;
+  color: var(--secondary-text);
 }
 
 .empty-state {
   text-align: center;
   padding: 40px;
-  color: #8e8e93;
+  color: var(--secondary-text);
 }
 
 /* Arena Styles */
@@ -313,7 +170,7 @@ h1 {
   top: 40px;
   left: 40px;
   background: transparent;
-  color: #007aff;
+  color: var(--accent-color);
   font-weight: 600;
   display: flex;
   align-items: center;
@@ -323,28 +180,17 @@ h1 {
 .arena-header {
   text-align: center;
   margin-bottom: 4vh;
-  color: #007aff;
+  color: var(--accent-color);
 }
 
 .arena-header h2 {
   margin: 16px 0 8px;
-  color: #1d1d1f;
+  color: var(--text-color);
   font-size: 32px;
 }
 
-.session-progress {
-  margin-top: 12px;
-  font-size: 14px;
-  font-weight: 700;
-  color: #007aff;
-  background: #f2f2f7;
-  padding: 6px 16px;
-  border-radius: 20px;
-  display: inline-block;
-}
-
 .arena-header p {
-  color: #8e8e93;
+  color: var(--secondary-text);
   margin: 0;
 }
 
@@ -360,14 +206,14 @@ h1 {
 .choice-card {
   width: 40vmin;
   height: 40vmin;
-  background: white;
+  background: var(--card-bg);
   border-radius: 15%;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   box-shadow: 0 2vmin 5vmin rgba(0,0,0,0.1);
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  border: 1px solid rgba(0,0,0,0.05);
+  border: 1px solid var(--border-color);
   position: relative;
 }
 
@@ -383,13 +229,12 @@ h1 {
   font-size: 3vmin;
   font-weight: 800;
   line-height: 1.3;
-  color: inherit;
+  color: var(--text-color);
   transition: background 0.2s, color 0.2s;
   overflow-y: auto;
   min-height: 0;
-  /* Hide scrollbar for Chrome, Safari and Opera */
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 .card-main-action::-webkit-scrollbar {
@@ -402,7 +247,7 @@ h1 {
 }
 
 .card-main-action:hover {
-  background: #007aff;
+  background: var(--accent-color);
   color: white;
 }
 
@@ -414,7 +259,7 @@ h1 {
   font-size: 13px;
   font-weight: 700;
   text-transform: uppercase;
-  color: #8e8e93;
+  color: var(--secondary-text);
   margin-bottom: 12px;
   letter-spacing: 0.5px;
 }
@@ -428,32 +273,13 @@ h1 {
   margin-left: auto;
 }
 
-.task-item.snoozed {
-  opacity: 0.8;
-  background: rgba(255,255,255,0.6);
-}
-
-.task-item.removed {
-  opacity: 0.5;
-  background: #fdfdfd;
-  border: 1px dashed #d1d1d6;
-}
-
-.removed-section .task-rank {
-  display: none;
-}
-
-.task-unsnooze:hover {
-  background: #0066d6;
-}
-
 .task-item:hover .task-actions {
   opacity: 1;
 }
 
 .snooze-options {
   display: flex;
-  background: #f2f2f7;
+  background: var(--btn-secondary-bg);
   border-radius: 8px;
   padding: 2px;
   gap: 2px;
@@ -465,18 +291,18 @@ h1 {
   border-radius: 6px;
   font-size: 11px;
   font-weight: 700;
-  color: #8e8e93;
+  color: var(--secondary-text);
   transition: all 0.2s;
 }
 
 .snooze-options button:hover {
-  background: white;
-  color: #007aff;
+  background: var(--card-bg);
+  color: var(--accent-color);
   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
 .task-unsnooze {
-  background: #007aff;
+  background: var(--accent-color);
   color: white;
   padding: 4px 12px;
   border-radius: 12px;
@@ -486,27 +312,52 @@ h1 {
 
 .task-meta {
   font-size: 12px;
-  color: #8e8e93;
+  color: var(--secondary-text);
 }
 
 .snoozed .task-text {
-  color: #8e8e93;
+  color: var(--secondary-text);
 }
 
 .task-icon {
-  color: #007aff;
+  color: var(--accent-color);
   display: flex;
   align-items: center;
   justify-content: center;
   width: 20px;
 }
 
+.task-item.snoozed {
+  opacity: 0.8;
+  background: var(--btn-secondary-bg);
+}
+
+.task-item.completed {
+  opacity: 0.6;
+}
+
+.task-item.removed {
+  opacity: 0.5;
+  background: var(--bg-color);
+  border: 1px dashed var(--secondary-text);
+}
+
+.snoozed-section .task-rank, 
+.completed-section .task-rank,
+.removed-section .task-rank {
+  display: none;
+}
+
+.task-unsnooze:hover {
+  background: var(--accent-hover);
+}
+
 /* Arena Footer & Snooze Styles */
 .card-footer {
   display: flex;
   flex-direction: column;
-  background: #f2f2f7;
-  border-top: 1px solid rgba(0,0,0,0.05);
+  background: var(--btn-secondary-bg);
+  border-top: 1px solid var(--border-color);
   z-index: 10;
 }
 
@@ -522,24 +373,24 @@ h1 {
 .card-snooze-options span {
   font-size: 1.5vmin;
   font-weight: 700;
-  color: #8e8e93;
+  color: var(--secondary-text);
   text-transform: uppercase;
   letter-spacing: 0.1vmin;
 }
 
 .card-snooze-options button {
-  background: white;
+  background: var(--card-bg);
   padding: 0.8vmin 1.5vmin;
   border-radius: 1vmin;
   font-size: 1.6vmin;
   font-weight: 700;
-  color: #007aff;
+  color: var(--accent-color);
   box-shadow: 0 0.5vmin 1vmin rgba(0,0,0,0.05);
   transition: all 0.2s;
 }
 
 .card-snooze-options button:hover {
-  background: #007aff;
+  background: var(--accent-color);
   color: white;
   transform: translateY(-0.2vmin);
 }
@@ -547,7 +398,7 @@ h1 {
 .card-done-action {
   flex-shrink: 0;
   background: transparent;
-  color: #8e8e93;
+  color: var(--secondary-text);
   padding: 2vmin;
   display: flex;
   align-items: center;
@@ -559,16 +410,257 @@ h1 {
 }
 
 .card-done-action:hover {
-  background: #34c759;
+  background: var(--success-color);
   color: white;
-  border-color: #34c759;
 }
 
 .vs {
   font-weight: 900;
-  color: #8e8e93;
+  color: var(--secondary-text);
   font-size: 2vmin;
   opacity: 0.5;
+}
+
+.main-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 40px;
+  background: var(--card-bg);
+  padding: 8px;
+  border-radius: 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  border: 1px solid var(--border-color);
+}
+
+.nav-group {
+  display: flex;
+  gap: 4px;
+}
+
+.main-nav button {
+  background: transparent;
+  padding: 8px 16px;
+  border-radius: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--secondary-text);
+  transition: all 0.2s;
+}
+
+.main-nav button.active {
+  background: var(--btn-secondary-bg);
+  color: var(--accent-color);
+}
+
+.nav-alert {
+  background: #fffbe6 !important;
+  color: #faad14 !important;
+  border: 1px solid #ffe58f !important;
+}
+
+:root[data-theme='dark'] .nav-alert {
+  background: #2b2111 !important;
+  color: #faad14 !important;
+  border: 1px solid #faad14 !important;
+}
+
+.global-task-input {
+  display: flex;
+  background: var(--card-bg);
+  padding: 4px 4px 4px 20px;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  margin-bottom: 40px;
+  border: 1px solid var(--border-color);
+}
+
+.global-task-input input {
+  flex: 1;
+  border: none;
+  font-size: 17px;
+  outline: none;
+  background: transparent;
+  color: var(--text-color);
+}
+
+.global-task-input button {
+  background: var(--accent-color);
+  color: white;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Focus View Styles */
+.focus-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 300px);
+  padding: 20px;
+}
+
+.focus-card {
+  background: var(--card-bg);
+  padding: 8vh 5vw;
+  border-radius: 40px;
+  width: 100%;
+  max-width: 900px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.04);
+  border: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 40vh;
+}
+
+.focus-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--secondary-text);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 3vh;
+}
+
+.focus-task-text {
+  font-size: 3.5vmin;
+  font-weight: 400;
+  margin: 0 0 10vh;
+  line-height: 1.6;
+  word-wrap: break-word;
+  color: var(--text-color);
+  max-width: 600px;
+  align-self: center;
+}
+
+.focus-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  align-items: center;
+}
+
+.btn-done-large {
+  background: var(--success-color);
+  color: #1d1d1f;
+  padding: 16px 48px;
+  border-radius: 40px;
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+  width: fit-content;
+  transition: all 0.3s ease;
+  opacity: 0.95;
+}
+
+.btn-done-large:hover {
+  transform: translateY(-2px);
+  opacity: 1;
+  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.08);
+}
+
+.focus-secondary-actions {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+}
+
+.focus-secondary-actions button {
+  background: transparent;
+  color: var(--secondary-text);
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.empty-focus {
+  text-align: center;
+  color: var(--secondary-text);
+}
+
+.empty-focus h2 {
+  color: var(--text-color);
+  margin: 16px 0 8px;
+}
+
+.btn-text-danger {
+  color: var(--danger-color) !important;
+}
+
+.single-card {
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.session-progress {
+  margin-top: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--accent-color);
+  background: var(--btn-secondary-bg);
+  padding: 6px 16px;
+  border-radius: 20px;
+  display: inline-block;
+}
+
+.recurring-badge {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #007aff;
+  background: #e1f0ff;
+  padding: 2px 8px;
+  border-radius: 6px;
+  width: fit-content;
+  margin-top: 4px;
+}
+
+.btn-select, .btn-select-mini {
+  background: var(--btn-secondary-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-color);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 4px 8px;
+  outline: none;
+  cursor: pointer;
+}
+
+.btn-select-mini {
+  font-size: 11px;
+  padding: 2px 4px;
+}
+
+.theme-toggle-group {
+  display: flex;
+  gap: 2px;
+  background: var(--btn-secondary-bg);
+  padding: 2px;
+  border-radius: 12px;
+}
+
+.theme-btn {
+  padding: 6px !important;
+  border-radius: 10px !important;
+}
+
+.theme-btn.active {
+  background: var(--card-bg) !important;
+  color: var(--accent-color) !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
 @media (max-width: 480px) {

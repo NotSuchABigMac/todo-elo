@@ -8,11 +8,16 @@ export interface Task {
   lastPrioritizedAt?: number;
   lastCheckedAt?: number;
   removedAt?: number;
+  recurringInterval?: 'daily' | 'weekly' | 'monthly';
   active: boolean;
 }
+
+export type RecurringInterval = 'daily' | 'weekly' | 'monthly';
 
 export interface Comparison {
   winnerId: string;
   loserId: string;
   timestamp: number;
 }
+
+export type Theme = 'light' | 'dark' | 'system';
