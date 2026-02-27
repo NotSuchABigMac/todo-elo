@@ -38,6 +38,8 @@ jobs:
           cache: 'npm'
       - name: Install dependencies
         run: npm install
+      - name: Make binaries executable
+        run: chmod +x node_modules/.bin/*
       - name: Build
         run: npm run build
       - name: Setup Pages
