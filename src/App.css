@@ -97,6 +97,35 @@ h1 {
   box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
 
+.task-item.dragging {
+  opacity: 0.4;
+  background: var(--btn-secondary-bg);
+  cursor: grabbing;
+}
+
+.task-item.drop-target {
+  border-top: 4px solid var(--accent-color);
+  margin-top: -2px; /* Slight adjustment */
+}
+
+.drag-handle {
+  cursor: grab;
+  color: var(--secondary-text);
+  opacity: 0.3;
+  transition: opacity 0.2s;
+  display: flex;
+  align-items: center;
+  margin-left: -8px;
+}
+
+.task-item:hover .drag-handle {
+  opacity: 1;
+}
+
+.dragging .drag-handle {
+  cursor: grabbing;
+}
+
 .task-rank {
   font-size: 14px;
   font-weight: 700;

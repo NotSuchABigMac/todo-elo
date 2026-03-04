@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Plus, Trash2, CheckCircle2, Play, ChevronLeft, Award, FileText, Clock, List, Target, AlertCircle, XCircle, Download, Sun, Moon, Monitor, RefreshCw, Settings } from 'lucide-react';
+import { Plus, Trash2, CheckCircle2, Play, ChevronLeft, Award, FileText, Clock, List, Target, AlertCircle, XCircle, Download, Sun, Moon, Monitor, RefreshCw, Settings, GripVertical } from 'lucide-react';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { Task, Comparison, Theme } from './types';
 import { calculateElo, getNextPair, addBusinessDays } from './utils/elo';
@@ -17,6 +17,8 @@ function App() {
   const [currentPair, setCurrentPair] = useState<[Task, Task] | null>(null);
   const [checkinTask, setCheckinTask] = useState<Task | null>(null);
   const [questionsInSession, setQuestionsInSession] = useState(0);
+  const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
+  const [dropTargetId, setDropTargetId] = useState<string | null>(null);
 
   const now = Date.now();
 
@@ -28,6 +30,58 @@ function App() {
       root.setAttribute('data-theme', theme);
     }
   }, [theme]);
+
+  const handleDragStart = (e: React.DragEvent, id: string) => {
+    setDraggedTaskId(id);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent, id: string) => {
+    e.preventDefault();
+    if (draggedTaskId !== id) {
+      setDropTargetId(id);
+    }
+  };
+
+  const handleDragEnd = () => {
+    setDraggedTaskId(null);
+    setDropTargetId(null);
+  };
+
+  const handleDrop = (e: React.DragEvent, targetId: string) => {
+    e.preventDefault();
+    if (!draggedTaskId || draggedTaskId === targetId) {
+      handleDragEnd();
+      return;
+    }
+
+    const list = activeAndAvailableTasks;
+    const fromIndex = list.findIndex(t => t.id === draggedTaskId);
+    const toIndex = list.findIndex(t => t.id === targetId);
+
+    if (fromIndex === -1 || toIndex === -1) {
+      handleDragEnd();
+      return;
+    }
+
+    const newList = [...list];
+    const [movedTask] = newList.splice(fromIndex, 1);
+    newList.splice(toIndex, 0, movedTask);
+
+    let newScore: number;
+    if (toIndex === 0) {
+      newScore = newList[1].score + 10;
+    } else if (toIndex === newList.length - 1) {
+      newScore = newList[newList.length - 2].score - 10;
+    } else {
+      const prevScore = newList[toIndex - 1].score;
+      const nextScore = newList[toIndex + 1].score;
+      newScore = (prevScore + nextScore) / 2;
+    }
+
+    setTasks(tasks.map(t => t.id === draggedTaskId ? { ...t, score: newScore, lastPrioritizedAt: Date.now() } : t));
+    handleDragEnd();
+  };
 
   const formatSnoozeDate = (days: number) => {
     return new Date(addBusinessDays(new Date(), days)).toLocaleDateString(undefined, { weekday: 'short' });
@@ -573,14 +627,25 @@ function App() {
               <section className="task-section">
                 <h3>Active</h3>
                 {activeAndAvailableTasks.map((task, index) => (
-                  <div key={task.id} className="task-item">
+                  <div 
+                    key={task.id} 
+                    className={`task-item ${draggedTaskId === task.id ? 'dragging' : ''} ${dropTargetId === task.id ? 'drop-target' : ''}`}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, task.id)}
+                    onDragOver={(e) => handleDragOver(e, task.id)}
+                    onDrop={(e) => handleDrop(e, task.id)}
+                    onDragEnd={handleDragEnd}
+                  >
+                    <div className="drag-handle">
+                      <GripVertical size={18} />
+                    </div>
                     <div className="task-rank">{index + 1}</div>
                     <button className="task-check" onClick={() => toggleComplete(task.id)}>
                       <CheckCircle2 size={20} className="icon-hollow" />
                     </button>
                     <div className="task-content">
                       <span className="task-text">{task.text}</span>
-                      <span className="task-score">{task.score} ELO</span>
+                      <span className="task-score">{Math.round(task.score)} ELO</span>
                     </div>
                     <div className="task-actions">
                       <select 
