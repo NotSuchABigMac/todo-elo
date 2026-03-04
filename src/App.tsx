@@ -251,54 +251,90 @@ function App() {
     const reader = new FileReader();
     reader.onload = (event) => {
       const content = event.target?.result as string;
-      const lines = content.split(/\r?\n/);
+      const lines = content.split(/\r?\n/).filter(line => line.trim());
       
       if (lines.length === 0) return;
 
-      const firstLine = lines[0].toLowerCase();
-      const isFullExport = firstLine.includes('text') && firstLine.includes('score');
+      const csvPattern = /^(.*),(\d+),(Active|Completed|Snoozed|Removed),(.*)$/;
+      const eloPattern = /^(\d+)\s*ELO$/i;
+      const intervalPattern = /^(Daily|Weekly|Monthly)$/i;
+      const dayMap: Record<string, number> = {
+        'sun': 0, 'mon': 1, 'tue': 2, 'wed': 3, 'thu': 4, 'fri': 5, 'sat': 6,
+        'sunday': 0, 'monday': 1, 'tuesday': 2, 'wednesday': 3, 'thursday': 4, 'friday': 5, 'saturday': 6
+      };
 
-      const parsedTasks: Task[] = lines
-        .slice(isFullExport ? 1 : 0) // Skip header if it's an export
-        .map(line => {
-          if (!line.trim()) return null;
+      const parsedTasks: Task[] = [];
+      let currentTask: Task | null = null;
 
-          if (isFullExport) {
-            // Complex CSV parsing to handle quoted commas
-            const matches = line.match(/(".*?"|[^,]+|(?<=,)(?=,)|(?<=,)$|^)/g);
-            if (!matches) return null;
-            
-            const columns = matches.map(m => m.replace(/^"|"$/g, '').replace(/""/g, '"'));
-            
-            return {
-              id: crypto.randomUUID(),
-              text: columns[0] || 'Untitled Task',
-              score: parseInt(columns[1]) || 1000,
-              active: columns[2] === 'Active' || columns[2] === 'Snoozed',
-              createdAt: columns[3] ? new Date(columns[3]).getTime() : Date.now(),
-              completedAt: columns[4] ? new Date(columns[4]).getTime() : undefined,
-              snoozedUntil: columns[5] ? new Date(columns[5]).getTime() : undefined,
-              removedAt: columns[6] ? new Date(columns[6]).getTime() : undefined,
-            };
-          } else {
-            // Simple text import
-            return {
-              id: crypto.randomUUID(),
-              text: line.trim().replace(/^"|"$/g, ''),
-              score: 1000,
-              createdAt: Date.now(),
-              active: true,
-            };
+      lines.forEach(line => {
+        const trimmed = line.trim();
+        const csvMatch = trimmed.match(csvPattern);
+        const eloMatch = trimmed.match(eloPattern);
+        const intervalMatch = trimmed.match(intervalPattern);
+        const dayLower = trimmed.toLowerCase();
+        const isDay = dayMap[dayLower] !== undefined;
+
+        if (csvMatch) {
+          // New CSV Task - Start a new group
+          const [_, text, scoreStr, status, rest] = csvMatch;
+          const timestamps = rest.split(',');
+          currentTask = {
+            id: crypto.randomUUID(),
+            text: text.trim().replace(/^"/, '').replace(/"$/, '').replace(/""/g, '"'),
+            score: parseInt(scoreStr) || 1000,
+            active: status === 'Active' || status === 'Snoozed',
+            createdAt: timestamps[0] ? new Date(timestamps[0]).getTime() : Date.now(),
+            completedAt: timestamps[1] ? new Date(timestamps[1]).getTime() : undefined,
+            snoozedUntil: timestamps[2] ? new Date(timestamps[2]).getTime() : undefined,
+            removedAt: timestamps[3] ? new Date(timestamps[3]).getTime() : undefined,
+          };
+          parsedTasks.push(currentTask);
+        } else if (eloMatch && currentTask) {
+          // Update ELO for current task (prefer metadata if it exists)
+          currentTask.score = parseInt(eloMatch[1]);
+        } else if (intervalMatch && currentTask) {
+          // Update Interval for current task
+          currentTask.recurringInterval = intervalMatch[1].toLowerCase() as any;
+        } else if (isDay && currentTask) {
+          // Update Days for current task
+          const dayNum = dayMap[dayLower];
+          if (!currentTask.daysOfWeek) currentTask.daysOfWeek = [];
+          if (!currentTask.daysOfWeek.includes(dayNum)) {
+            currentTask.daysOfWeek.push(dayNum);
+            currentTask.daysOfWeek.sort();
           }
-        })
-        .filter((t): t is Task => t !== null);
+          // If days are provided, it's effectively a weekly task if no other interval is set
+          if (!currentTask.recurringInterval) {
+            currentTask.recurringInterval = 'weekly';
+          }
+        } else if (!/^\d+$/.test(trimmed) && !trimmed.toLowerCase().startsWith('text,score,status')) {
+          // New Simple Task - Start a new group (ignores plain index numbers and headers)
+          currentTask = {
+            id: crypto.randomUUID(),
+            text: trimmed.replace(/^"|"$/g, ''),
+            score: 1000,
+            createdAt: Date.now(),
+            active: true,
+          };
+          parsedTasks.push(currentTask);
+        }
+      });
 
       if (parsedTasks.length > 0) {
         setTasks(prev => [...prev, ...parsedTasks]);
+        alert(`Successfully imported ${parsedTasks.length} task${parsedTasks.length === 1 ? '' : 's'}.`);
+      } else {
+        alert("No valid tasks found in the file.");
       }
       e.target.value = '';
     };
     reader.readAsText(file);
+  };
+
+  const getDaysString = (days?: number[]) => {
+    if (!days || days.length === 0) return '';
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    return days.map(d => dayNames[d]).join(', ');
   };
 
   return (
@@ -479,7 +515,12 @@ function App() {
                 <div className="task-icon"><RefreshCw size={16} /></div>
                 <div className="task-content">
                   <span className="task-text">{task.text}</span>
-                  <div className="recurring-badge">{task.recurringInterval}</div>
+                  <div className="recurring-meta">
+                    <div className="recurring-badge">{task.recurringInterval}</div>
+                    {task.daysOfWeek && task.daysOfWeek.length > 0 && (
+                      <div className="recurring-days">{getDaysString(task.daysOfWeek)}</div>
+                    )}
+                  </div>
                 </div>
                 <div className="task-actions">
                   <select 

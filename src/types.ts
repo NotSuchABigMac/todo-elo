@@ -9,6 +9,7 @@ export interface Task {
   lastCheckedAt?: number;
   removedAt?: number;
   recurringInterval?: 'daily' | 'weekly' | 'monthly';
+  daysOfWeek?: number[];
   active: boolean;
 }
 
