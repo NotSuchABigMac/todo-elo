@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Plus, Trash2, CheckCircle2, Play, ChevronLeft, Award, FileText, Clock, List, Target, AlertCircle, XCircle, Download, Sun, Moon, Monitor, RefreshCw, Settings, GripVertical, Edit2, Check } from 'lucide-react';
+import { Plus, Trash2, CheckCircle2, Play, ChevronLeft, Award, FileText, Clock, List, Target, AlertCircle, XCircle, Download, Sun, Moon, Monitor, RefreshCw, Settings, GripVertical, Edit2, Check, Calendar } from 'lucide-react';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { Task, Comparison, Theme } from './types';
 import { calculateElo, getNextPair, addBusinessDays, addHours, getNextDayOccurrence } from './utils/elo';
@@ -538,8 +538,8 @@ function App() {
                   <CheckCircle2 size={24} /> Mark as Done
                 </button>
                 <div className="focus-secondary-actions">
-                   <button onClick={() => snoozeTask(topTask.id, 1, 'hours')}>Snooze 1h</button>
-                   <button onClick={() => snoozeTask(topTask.id, 1)}>Snooze {formatSnoozeDate(1)}</button>
+                   <button onClick={() => snoozeTask(topTask.id, 1, 'hours')}><Clock size={16}/> Snooze 1h</button>
+                   <button onClick={() => snoozeTask(topTask.id, 1)}><Calendar size={16}/> Snooze {formatSnoozeDate(1)}</button>
                    <button className="btn-text-danger" onClick={() => removeTask(topTask.id)}>Remove</button>
                 </div>
               </div>
