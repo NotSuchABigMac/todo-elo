@@ -566,6 +566,135 @@ h1 {
   justify-content: center;
 }
 
+/* Editing Styles */
+.focus-text-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 8vh;
+  padding: 0 20px;
+}
+
+.focus-task-text {
+  font-size: 3.5vmin;
+  font-weight: 400;
+  margin: 0;
+  line-height: 1.6;
+  word-wrap: break-word;
+  color: var(--text-color);
+  max-width: 600px;
+}
+
+.btn-edit-focus {
+  background: var(--btn-secondary-bg);
+  color: var(--secondary-text);
+  padding: 8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  opacity: 0;
+}
+
+.focus-card:hover .btn-edit-focus {
+  opacity: 1;
+}
+
+.btn-edit-focus:hover {
+  background: var(--border-color);
+  color: var(--accent-color);
+  transform: scale(1.1);
+}
+
+.focus-edit-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 8vh;
+  width: 100%;
+}
+
+.focus-edit-input {
+  width: 100%;
+  max-width: 600px;
+  font-size: 3.5vmin;
+  font-family: inherit;
+  padding: 12px 24px;
+  border-radius: 20px;
+  border: 2px solid var(--accent-color);
+  background: var(--card-bg);
+  color: var(--text-color);
+  text-align: center;
+  outline: none;
+}
+
+.focus-edit-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-save {
+  background: var(--accent-color);
+  color: white;
+  padding: 8px 24px;
+  border-radius: 20px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-cancel {
+  background: transparent;
+  color: var(--secondary-text);
+  padding: 8px 24px;
+  font-weight: 600;
+}
+
+.task-text-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-edit-inline {
+  background: transparent;
+  color: var(--secondary-text);
+  padding: 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
+  display: flex;
+  align-items: center;
+}
+
+.task-item:hover .btn-edit-inline {
+  opacity: 1;
+}
+
+.btn-edit-inline:hover {
+  color: var(--accent-color);
+}
+
+.inline-edit-input {
+  width: 100%;
+  font-size: 17px;
+  font-weight: 500;
+  font-family: inherit;
+  padding: 4px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--accent-color);
+  background: var(--card-bg);
+  color: var(--text-color);
+  outline: none;
+}
+
+.task-text {
+  cursor: pointer;
+}
+
 /* Focus View Styles */
 .focus-view {
   display: flex;
@@ -598,17 +727,6 @@ h1 {
   text-transform: uppercase;
   letter-spacing: 1.5px;
   margin-bottom: 3vh;
-}
-
-.focus-task-text {
-  font-size: 3.5vmin;
-  font-weight: 400;
-  margin: 0 0 10vh;
-  line-height: 1.6;
-  word-wrap: break-word;
-  color: var(--text-color);
-  max-width: 600px;
-  align-self: center;
 }
 
 .focus-actions {

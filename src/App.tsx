@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Plus, Trash2, CheckCircle2, Play, ChevronLeft, Award, FileText, Clock, List, Target, AlertCircle, XCircle, Download, Sun, Moon, Monitor, RefreshCw, Settings, GripVertical } from 'lucide-react';
+import { Plus, Trash2, CheckCircle2, Play, ChevronLeft, Award, FileText, Clock, List, Target, AlertCircle, XCircle, Download, Sun, Moon, Monitor, RefreshCw, Settings, GripVertical, Edit2, Check } from 'lucide-react';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { Task, Comparison, Theme } from './types';
 import { calculateElo, getNextPair, addBusinessDays } from './utils/elo';
@@ -19,6 +19,9 @@ function App() {
   const [questionsInSession, setQuestionsInSession] = useState(0);
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
   const [dropTargetId, setDropTargetId] = useState<string | null>(null);
+  
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+  const [editingText, setEditingText] = useState('');
 
   const now = Date.now();
 
@@ -30,6 +33,26 @@ function App() {
       root.setAttribute('data-theme', theme);
     }
   }, [theme]);
+
+  const startEditing = (task: Task) => {
+    setEditingTaskId(task.id);
+    setEditingText(task.text);
+  };
+
+  const saveEdit = () => {
+    if (!editingTaskId) return;
+    if (!editingText.trim()) {
+      setEditingTaskId(null);
+      return;
+    }
+    
+    setTasks(tasks.map(t => t.id === editingTaskId ? { ...t, text: editingText.trim() } : t));
+    setEditingTaskId(null);
+  };
+
+  const cancelEdit = () => {
+    setEditingTaskId(null);
+  };
 
   const handleDragStart = (e: React.DragEvent, id: string) => {
     setDraggedTaskId(id);
@@ -80,6 +103,39 @@ function App() {
     }
 
     setTasks(tasks.map(t => t.id === draggedTaskId ? { ...t, score: newScore, lastPrioritizedAt: Date.now() } : t));
+
+    // Record comparisons for inferred superiority
+    const nowComp = Date.now();
+    const newComps: Comparison[] = [];
+    
+    // Moved task loses to everyone now above it
+    for (let i = 0; i < toIndex; i++) {
+      newComps.push({ winnerId: newList[i].id, loserId: draggedTaskId, timestamp: nowComp });
+    }
+    // Moved task wins over everyone now below it
+    for (let i = toIndex + 1; i < newList.length; i++) {
+      newComps.push({ winnerId: draggedTaskId, loserId: newList[i].id, timestamp: nowComp });
+    }
+
+    setComparisons(prev => {
+      // Remove any old comparisons involving the moved task that now contradict the new manual order
+      const filtered = prev.filter(c => {
+        const isParticipant = c.winnerId === draggedTaskId || c.loserId === draggedTaskId;
+        if (!isParticipant) return true;
+        
+        if (c.winnerId === draggedTaskId) {
+          const loserIdx = newList.findIndex(t => t.id === c.loserId);
+          return loserIdx === -1 || loserIdx > toIndex; // Keep if loser is still below (or not in active list)
+        }
+        if (c.loserId === draggedTaskId) {
+          const winnerIdx = newList.findIndex(t => t.id === c.winnerId);
+          return winnerIdx === -1 || winnerIdx < toIndex; // Keep if winner is still above (or not in active list)
+        }
+        return true;
+      });
+      return [...filtered, ...newComps];
+    });
+
     handleDragEnd();
   };
 
@@ -447,7 +503,31 @@ function App() {
           {topTask ? (
             <div className="focus-card">
               <span className="focus-label">Current Priority</span>
-              <h2 className="focus-task-text">{topTask.text}</h2>
+              {editingTaskId === topTask.id ? (
+                <div className="focus-edit-container">
+                  <input 
+                    className="focus-edit-input"
+                    value={editingText}
+                    onChange={(e) => setEditingText(e.target.value)}
+                    autoFocus
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') saveEdit();
+                      if (e.key === 'Escape') cancelEdit();
+                    }}
+                  />
+                  <div className="focus-edit-actions">
+                    <button className="btn-save" onClick={saveEdit}><Check size={20}/> Save</button>
+                    <button className="btn-cancel" onClick={cancelEdit}>Cancel</button>
+                  </div>
+                </div>
+              ) : (
+                <div className="focus-text-container">
+                  <h2 className="focus-task-text">{topTask.text}</h2>
+                  <button className="btn-edit-focus" onClick={() => startEditing(topTask)} title="Edit task name">
+                    <Edit2 size={20} />
+                  </button>
+                </div>
+              )}
               <div className="focus-actions">
                 <button className="btn-done-large" onClick={() => toggleComplete(topTask.id)}>
                   <CheckCircle2 size={24} /> Mark as Done
@@ -644,7 +724,28 @@ function App() {
                       <CheckCircle2 size={20} className="icon-hollow" />
                     </button>
                     <div className="task-content">
-                      <span className="task-text">{task.text}</span>
+                      {editingTaskId === task.id ? (
+                        <div className="inline-edit-container">
+                          <input 
+                            className="inline-edit-input"
+                            value={editingText}
+                            onChange={(e) => setEditingText(e.target.value)}
+                            autoFocus
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') saveEdit();
+                              if (e.key === 'Escape') cancelEdit();
+                            }}
+                            onBlur={saveEdit}
+                          />
+                        </div>
+                      ) : (
+                        <div className="task-text-row">
+                          <span className="task-text" onClick={() => startEditing(task)}>{task.text}</span>
+                          <button className="btn-edit-inline" onClick={() => startEditing(task)}>
+                            <Edit2 size={14} />
+                          </button>
+                        </div>
+                      )}
                       <span className="task-score">{Math.round(task.score)} ELO</span>
                     </div>
                     <div className="task-actions">
