@@ -846,6 +846,23 @@ h1 {
   height: 24px;
 }
 
+.task-unsnooze {
+  background: var(--btn-secondary-bg);
+  color: var(--accent-color);
+  border-radius: 8px;
+  padding: 4px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid var(--border-color);
+  transition: all 0.2s;
+}
+
+.task-unsnooze:hover {
+  background: var(--accent-color);
+  color: white;
+  border-color: var(--accent-color);
+}
+
 .task-delete {
   background: var(--btn-secondary-bg);
   color: var(--danger-color);

@@ -80,3 +80,27 @@ export const addBusinessDays = (date: Date, days: number): number => {
   }
   return current.getTime();
 };
+
+export const addHours = (date: Date, hours: number): number => {
+  const current = new Date(date);
+  current.setHours(current.getHours() + hours);
+  return current.getTime();
+};
+
+export const getNextDayOccurrence = (days: number[]): number => {
+  const now = new Date();
+  const today = now.getDay();
+  
+  // Find the smallest gap to a day in the list
+  let minGap = 8;
+  days.forEach(day => {
+    let gap = day - today;
+    if (gap <= 0) gap += 7;
+    if (gap < minGap) minGap = gap;
+  });
+  
+  const nextDate = new Date();
+  nextDate.setDate(now.getDate() + minGap);
+  nextDate.setHours(0, 0, 0, 0); // Start of that day
+  return nextDate.getTime();
+};

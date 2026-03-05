@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { Plus, Trash2, CheckCircle2, Play, ChevronLeft, Award, FileText, Clock, List, Target, AlertCircle, XCircle, Download, Sun, Moon, Monitor, RefreshCw, Settings, GripVertical, Edit2, Check } from 'lucide-react';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { Task, Comparison, Theme } from './types';
-import { calculateElo, getNextPair, addBusinessDays } from './utils/elo';
+import { calculateElo, getNextPair, addBusinessDays, addHours, getNextDayOccurrence } from './utils/elo';
 import './App.css';
 
 function App() {
@@ -212,13 +212,18 @@ function App() {
         const isCompleting = t.active;
         let snoozedUntil = t.snoozedUntil;
         
-        if (isCompleting && t.recurringInterval) {
+        if (isCompleting && (t.recurringInterval || (t.daysOfWeek && t.daysOfWeek.length > 0))) {
           // If recurring, calculate next date
-          const nextDate = new Date();
-          if (t.recurringInterval === 'daily') nextDate.setDate(nextDate.getDate() + 1);
-          if (t.recurringInterval === 'weekly') nextDate.setDate(nextDate.getDate() + 7);
-          if (t.recurringInterval === 'monthly') nextDate.setMonth(nextDate.getMonth() + 1);
-          snoozedUntil = nextDate.getTime();
+          let snoozedUntil: number;
+          if (t.daysOfWeek && t.daysOfWeek.length > 0) {
+            snoozedUntil = getNextDayOccurrence(t.daysOfWeek);
+          } else {
+            const nextDate = new Date();
+            if (t.recurringInterval === 'daily') nextDate.setDate(nextDate.getDate() + 1);
+            if (t.recurringInterval === 'weekly') nextDate.setDate(nextDate.getDate() + 7);
+            if (t.recurringInterval === 'monthly') nextDate.setMonth(nextDate.getMonth() + 1);
+            snoozedUntil = nextDate.getTime();
+          }
           return { ...t, lastCheckedAt: Date.now(), snoozedUntil }; // Stay active but snooze
         }
         
@@ -294,8 +299,8 @@ function App() {
     document.body.removeChild(link);
   };
 
-  const snoozeTask = (id: string, days: number) => {
-    const until = addBusinessDays(new Date(), days);
+  const snoozeTask = (id: string, amount: number, type: 'days' | 'hours' = 'days') => {
+    const until = type === 'days' ? addBusinessDays(new Date(), amount) : addHours(new Date(), amount);
     const updatedTasks = tasks.map(t => t.id === id ? { ...t, snoozedUntil: until, lastCheckedAt: Date.now() } : t);
     setTasks(updatedTasks);
     
@@ -533,6 +538,7 @@ function App() {
                   <CheckCircle2 size={24} /> Mark as Done
                 </button>
                 <div className="focus-secondary-actions">
+                   <button onClick={() => snoozeTask(topTask.id, 1, 'hours')}>Snooze 1h</button>
                    <button onClick={() => snoozeTask(topTask.id, 1)}>Snooze {formatSnoozeDate(1)}</button>
                    <button className="btn-text-danger" onClick={() => removeTask(topTask.id)}>Remove</button>
                 </div>
@@ -560,6 +566,7 @@ function App() {
                <div className="card-main-action">{checkinTask.text}</div>
                <div className="card-footer">
                   <div className="card-snooze-options">
+                    <button onClick={() => snoozeTask(checkinTask.id, 1, 'hours')}>1h</button>
                     <button onClick={() => snoozeTask(checkinTask.id, 3)}>Snooze {formatSnoozeDate(3)}</button>
                     <button onClick={() => snoozeTask(checkinTask.id, 5)}>Snooze {formatSnoozeDate(5)}</button>
                     <button className="btn-text-danger" onClick={() => removeTask(checkinTask.id)}>Remove</button>
@@ -604,6 +611,7 @@ function App() {
                   <div className="card-footer">
                     <div className="card-snooze-options">
                       <span>Snooze</span>
+                      <button onClick={() => snoozeTask(currentPair[0].id, 1, 'hours')}>1h</button>
                       <button onClick={() => snoozeTask(currentPair[0].id, 1)}>{formatSnoozeDate(1)}</button>
                       <button onClick={() => snoozeTask(currentPair[0].id, 3)}>{formatSnoozeDate(3)}</button>
                       <button onClick={() => snoozeTask(currentPair[0].id, 5)}>{formatSnoozeDate(5)}</button>
@@ -622,6 +630,7 @@ function App() {
                   <div className="card-footer">
                     <div className="card-snooze-options">
                       <span>Snooze</span>
+                      <button onClick={() => snoozeTask(currentPair[1].id, 1, 'hours')}>1h</button>
                       <button onClick={() => snoozeTask(currentPair[1].id, 1)}>{formatSnoozeDate(1)}</button>
                       <button onClick={() => snoozeTask(currentPair[1].id, 3)}>{formatSnoozeDate(3)}</button>
                       <button onClick={() => snoozeTask(currentPair[1].id, 5)}>{formatSnoozeDate(5)}</button>
@@ -760,6 +769,7 @@ function App() {
                         <option value="monthly">Monthly</option>
                       </select>
                       <div className="snooze-options">
+                        <button onClick={() => snoozeTask(task.id, 1, 'hours')} title="Snooze 1h">1h</button>
                         <button onClick={() => snoozeTask(task.id, 1)} title="Snooze 1d">{formatSnoozeDate(1)}</button>
                         <button onClick={() => snoozeTask(task.id, 3)} title="Snooze 3d">{formatSnoozeDate(3)}</button>
                         <button onClick={() => snoozeTask(task.id, 5)} title="Snooze 5d">{formatSnoozeDate(5)}</button>
@@ -781,9 +791,16 @@ function App() {
                     <div className="task-icon"><Clock size={16} /></div>
                     <div className="task-content">
                       <span className="task-text">{task.text}</span>
-                      <span className="task-meta">Until {new Date(task.snoozedUntil!).toLocaleDateString()}</span>
+                      <span className="task-meta">
+                        Until {task.snoozedUntil && (task.snoozedUntil - now < 24 * 60 * 60 * 1000) 
+                          ? new Date(task.snoozedUntil).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
+                          : new Date(task.snoozedUntil!).toLocaleDateString()}
+                      </span>
                     </div>
                     <div className="task-actions">
+                      <button className="task-unsnooze" onClick={() => snoozeTask(task.id, 1, 'hours')}>
+                        +1h
+                      </button>
                       <button className="task-unsnooze" onClick={() => setTasks(tasks.map(t => t.id === task.id ? { ...t, snoozedUntil: undefined } : t))}>
                         Wake
                       </button>
